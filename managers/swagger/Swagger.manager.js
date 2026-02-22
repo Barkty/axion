@@ -433,7 +433,7 @@ module.exports = class SwaggerManager {
      * Get request body for endpoint
      */
     _getRequestBodyForEndpoint(manager, fnName) {
-        const methodsWithBody = ['create', 'update', 'register', 'login', 'changePassword', 'assignRole', 'transfer', 'updateProfile', 'refreshToken', 'assignTeacher'];
+        const methodsWithBody = ['create', 'update', 'register', 'login', 'changePassword', 'assignRole', 'transfer', 'updateProfile', 'refreshToken', 'assignTeacher', 'updateStudent', 'updateUser'];
         
         if (methodsWithBody.includes(fnName)) {
             const schemaName = this._getSchemaName(manager, fnName);

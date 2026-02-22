@@ -13,7 +13,7 @@ module.exports = ({uri})=>{
 
   // When successfully connected
   mongoose.connection.on('connected', function () {
-    console.log('Mongoose default connection open to ' + uri);
+    console.log('Mongoose default connection open to ');
   });
 
   // If the connection throws an error
