@@ -1,5 +1,4 @@
 const layers = {
-
     board: {
 
         /** all board are public by default */
@@ -33,17 +32,51 @@ const layers = {
                 _default: {inherit: true},
             }
         }
+    },
+
+    superadmin: {
+        name: 'Super Administrator',
+        permissions: {
+            users: { list: true, create: true, update: true, delete: true, view: true, assign_role: true },
+            schools: { list: true, create: true, update: true, delete: true, view: true },
+            classrooms: { list: true, create: true, update: true, delete: true, view: true },
+            students: { list: true, create: true, update: true, delete: true, view: true, transfer: true }
+        }
+    },
+    school_admin: {
+        name: 'School Administrator',
+        permissions: {
+            users: { list: true, create: true, update: true, view: true },
+            schools: { view: true, update: true },
+            classrooms: { list: true, create: true, update: true, delete: true, view: true },
+            students: { list: true, create: true, update: true, view: true, transfer: true }
+        }
+    },
+    teacher: {
+        name: 'Teacher',
+        permissions: {
+            users: { view: true },
+            classrooms: { view: true, list: true },
+            students: { list: true, view: true }
+        }
+    },
+    student: {
+        name: 'Student',
+        permissions: {
+            users: { view: true },
+            students: { view: true }
+        }
     }
 }
 
+
 const actions = {
-    blocked: -1,
-    none: 1,
-    read: 2,
-    create: 3,
-    audit: 4,
-    config: 5
-}
+    users: ['list', 'create', 'update', 'delete', 'view', 'assign_role'],
+    schools: ['list', 'create', 'update', 'delete', 'view'],
+    logs: ['list', 'create', 'update', 'delete', 'view'],
+    classrooms: ['list', 'create', 'update', 'delete', 'view'],
+    students: ['list', 'create', 'update', 'delete', 'view', 'transfer']
+};
 
 
 module.exports = {

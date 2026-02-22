@@ -62,7 +62,6 @@ module.exports = class TokenManager {
     v1_createShortToken({__headers, __device}){
         const token = __headers.token;
         if(!token)return {error: 'missing token '};
-        console.log('found token', token);
 
         let decoded = this.verifyLongToken({ token });
         if(!decoded){ return {error: 'invalid'} };

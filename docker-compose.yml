@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:6
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      - MONGO_INITDB_DATABASE=school_management
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mongodb
+      - redis
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017
+      - CACHE_REDIS=redis://redis:6379
+      - OYSTER_REDIS=redis://redis:6379
+      - CORTEX_REDIS=redis://redis:6379
+    env_file:
+      - .env
+
+volumes:
+  mongodb_data:
+  redis_data:

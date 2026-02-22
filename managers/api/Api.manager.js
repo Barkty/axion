@@ -1,8 +1,23 @@
 const getParamNames = require('./_common/getParamNames');
+
 /** 
  * scans all managers for exposed methods 
  * and makes them available through a handler middleware
  */
+
+
+const PUBLIC_ROUTES = new Set([
+    'user.register',
+    'user.login',
+    'user.refreshToken',
+    'swagger.ui', 
+    'swagger.getUi', 
+    'swagger.getJson',
+    'swagger.json',
+]);
+
+// ─── Auth middleware identifiers to strip for public routes ──────────────────
+const AUTH_MWS = new Set(['__shark', '__user', '__token']);
 
 module.exports = class ApiHandler {
 
@@ -23,25 +38,23 @@ module.exports = class ApiHandler {
         this.methodMatrix  = {};
         this.auth          = {};
         this.fileUpload    = {};
-        this.mwsStack        = {};
+        this.mwsStack      = {};
         this.mw            = this.mw.bind(this);
 
         /** filter only the modules that have interceptors */
-        // console.log(`# Http API`);
         Object.keys(this.managers).forEach(mk=>{
             if(this.managers[mk][this.prop]){
-                // console.log('managers - mk ', this.managers[mk])
                 this.methodMatrix[mk]={};
-                // console.log(`## ${mk}`);
                 this.managers[mk][this.prop].forEach(i=>{
                     /** creating the method matrix */
                     let method = 'post';
                     let fnName = i;
                     if(i.includes("=")){
                         let frags = i.split('=');
-                        method=frags[0];
-                        fnName=frags[1];
+                        method=frags[1];
+                        fnName=frags[0];
                     }
+
                     if(!this.methodMatrix[mk][method]){
                         this.methodMatrix[mk][method]=[];
                     }
@@ -64,7 +77,6 @@ module.exports = class ApiHandler {
                             // this is a middleware identifier 
                             // mws are executed in the same order they existed
                             /** check if middleware exists */
-                            // console.log(this.mwsRepo);
                             if(!this.mwsRepo[param]){
                                 throw Error(`Unable to find middleware ${param}`)
                             } else {
@@ -72,9 +84,6 @@ module.exports = class ApiHandler {
                             }
                         }
                     })
-                    
-                    // console.log(`* ${i} :`, 'args=', params);
-
                 });
             }
         });
@@ -83,7 +92,6 @@ module.exports = class ApiHandler {
         Object.keys(this.managers).forEach(mk=>{
             if(this.managers[mk].interceptor){
                 this.exposed[mk]=this.managers[mk];
-                // console.log(`## ${mk}`);
                 if(this.exposed[mk].cortexExposed){
                     this.exposed[mk].cortexExposed.forEach(i=>{
                         // console.log(`* ${i} :`,getParamNames(this.exposed[mk][i]));
@@ -103,30 +111,27 @@ module.exports = class ApiHandler {
                 cb({ error: `failed to execute ${fnName}` });
             }
         });
-        
     }
-
 
     async _exec({targetModule, fnName, cb, data}){
         let result = {};
-        
-            try {
-                result = await targetModule[`${fnName}`](data);
-            } catch (err){
-                console.log(`error`, err);
-                result.error = `${fnName} failed to execute`;
-            }
+
+        try {
+            result = await targetModule[`${fnName}`](data);
+        } catch (err){
+            console.log(`error`, err);
+            result = { error: err.message || `${fnName} failed to execute` };
+        }
     
         if(cb)cb(result);
         return result;
     }
 
-     /** a middle for executing admin apis trough HTTP */
+    /** a middleware for executing admin apis through HTTP */
     async mw(req, res, next){
 
         let method        = req.method.toLowerCase();
         let moduleName    = req.params.moduleName;
-        let context       = req.params.context;
         let fnName        = req.params.fnName;
         let moduleMatrix  = this.methodMatrix[moduleName];
 
@@ -142,32 +147,48 @@ module.exports = class ApiHandler {
             return this.managers.responseDispatcher.dispatch(res, {ok: false, message: `unable to find function ${fnName} with method ${method}`});
         }
 
-        // console.log(`${moduleName}.${fnName}`);
+        let routeKey   = `${moduleName}.${fnName}`;
+        let isPublic   = PUBLIC_ROUTES.has(routeKey);
+        let targetStack = this.mwsStack[routeKey];
 
-        let targetStack = this.mwsStack[`${moduleName}.${fnName}`];
+        // Strip auth middlewares for public routes
+        if (isPublic) {
+            targetStack = targetStack.filter(mw => !AUTH_MWS.has(mw));
+        }
 
         let hotBolt = this.mwsExec.createBolt({stack: targetStack, req, res, onDone: async ({req, res, results})=>{
+            if (res.headersSent) {
+                console.warn("⚠️ Skipping onDone — response already sent");
+                return;
+            }
 
-            /** executed after all middleware finished */
+            let body   = req.body || req.parsedBody || {};
+            let params = req.params || {};
+            let query  = req.query  || {};
 
-            let body = req.body || {};
-            let result = await this._exec({targetModule: this.managers[moduleName], fnName, data: {
-                ...body, 
-                ...results,
-                res,
-            }});
-            if(!result)result={}
+            let result = await this._exec({
+                targetModule: this.managers[moduleName], 
+                fnName, 
+                data: {
+                    params,
+                    query,
+                    data: body,
+                    res,
+                    ...results,
+                }
+            });
+
+            if(!result) result = {};
 
             if(result.selfHandleResponse){
-                // do nothing if response handeled
+                // do nothing if response handled
             } else {
-                
                 if(result.errors){
                     return this.managers.responseDispatcher.dispatch(res, {ok: false, errors: result.errors});
                 } else if(result.error){
                     return this.managers.responseDispatcher.dispatch(res, {ok: false, message: result.error});
                 } else {
-                    return this.managers.responseDispatcher.dispatch(res, {ok:true, data: result});
+                    return this.managers.responseDispatcher.dispatch(res, {ok: true, data: result });
                 }
             }
         }});

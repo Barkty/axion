@@ -91,4 +91,5 @@ sw.*
 
 # vscode
 .vscode/
-
+*.http
+*.sh

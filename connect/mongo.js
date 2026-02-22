@@ -4,32 +4,32 @@ mongoose.Promise    = global.Promise;
 module.exports = ({uri})=>{
   //database connection
   mongoose.connect(uri, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
+    maxPoolSize: 10,
+    minPoolSize: 1,
+    serverSelectionTimeoutMS: 5000,
+    socketTimeoutMS: 45000,
   });
 
 
   // When successfully connected
   mongoose.connection.on('connected', function () {
-    console.log('💾  Mongoose default connection open to ' + uri);
+    console.log('Mongoose default connection open to ' + uri);
   });
 
   // If the connection throws an error
   mongoose.connection.on('error',function (err) {
-    console.log('💾  Mongoose default connection error: ' + err);
-    console.log('=> if using local mongodb: make sure that mongo server is running \n'+
-      '=> if using online mongodb: check your internet connection \n');
+    console.log('Mongoose default connection error: ' + err);
   });
 
   // When the connection is disconnected
   mongoose.connection.on('disconnected', function () {
-    console.log('💾  Mongoose default connection disconnected');
+    console.log('Mongoose default connection disconnected');
   });
 
   // If the Node process ends, close the Mongoose connection
   process.on('SIGINT', function() {
     mongoose.connection.close(function () {
-      console.log('💾  Mongoose default connection disconnected through app termination');
+      console.log('Mongoose default connection disconnected through app termination');
       process.exit(0);
     });
   });
