@@ -51,7 +51,7 @@ module.exports = class SwaggerManager {
                     description: 'Development server'
                 },
                 {
-                    url: this.config.dotEnv.PROD_URL || 'https://api.school.com',
+                    url: this.config.dotEnv.PROD_URL,
                     description: 'Production server'
                 }
             ],
@@ -236,7 +236,7 @@ module.exports = class SwaggerManager {
                 
                 exposed.forEach(endpoint => {
                     try {
-                        const [method, pathPattern] = endpoint.split('=');
+                        const [pathPattern, method] = endpoint.split('=');
                         
                         if (!method || !pathPattern) {
                             this.logger.warn(`Invalid endpoint format: ${endpoint}`);

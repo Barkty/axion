@@ -24,8 +24,8 @@ A RESTful API for managing schools, classrooms, and students built with the Axio
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/Barkty/school-management-api.git
-cd school-management-api
+git clone https://github.com/Barkty/axion.git
+cd axion
 ```
 
 2. Install dependencies:

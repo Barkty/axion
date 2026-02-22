@@ -7,6 +7,7 @@ const SERVICE_NAME                     = (process.env.SERVICE_NAME)? utils.slugi
 const USER_PORT                        = process.env.USER_PORT || 5111;
 const ADMIN_PORT                       = process.env.ADMIN_PORT || 5222;
 const ADMIN_URL                        = process.env.ADMIN_URL || `http://localhost:${ADMIN_PORT}`;
+const PROD_URL                        = process.env.PROD_URL || `http://localhost:${ADMIN_PORT}`;
 const ENV                              = process.env.NODE_ENV || "development";
 const REDIS_URI                        = process.env.REDIS_URI || "redis://127.0.0.1:6379";
 
@@ -77,7 +78,8 @@ config.dotEnv = {
     LOG_FILE_MAX_SIZE,
     LOG_FILE_MAX_FILES,
     LOG_CORTEX_ENABLED,
-    LOG_CORTEX_TOPIC
+    LOG_CORTEX_TOPIC,
+    PROD_URL
 };
 
 
